@@ -1,9 +1,25 @@
 {
-  "name": "thePushBackend",
+  "name": "the-push-backend",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "scripts": {
+    "start": "nodemon app.js",
+    "build": "webpack --mode production",
+    "buildDev": "webpack --mode development"
+  },
   "dependencies": {
+    "@babel/core": "^7.12.16",
+    "@babel/register": "^7.12.13",
     "anzii": "^5.0.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.2.3",
+    "@babel/preset-env": "^7.3.4",
+    "nodemon": "^1.19.4",
+    "source-map-loader": "^4.0.1",
+    "webpack": "^5.69.1",
+    "webpack-cli": "^4.9.2",
+    "webpack-dev-server": "^4.7.4"
   }
 }
