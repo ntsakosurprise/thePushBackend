@@ -18,7 +18,7 @@ class Hello {
     let { payload } = data;
     let { user } = payload;
     let { name, surname } = user; // assume name to be "Ntsako" and surname to be "Mashele"
-    let message = `Hello ${name} ${surname}, I'm happy to meet you.'`;
+    let message = `Hello ${name} ${surname}, I'm happy to meet you., you are being run on docker'`;
     self.logSync(payload.parsed.user);
 
     return self.callback(null, { message: message });
