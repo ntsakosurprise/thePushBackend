@@ -68,14 +68,18 @@ export const handlePushrTask = async function(data){
             //   return self.callback(null,{pushr: {message: 'Device has been successfully saved'}})
              
           
-            self.saveDeviceToken(user.payload)
+            return self.saveDeviceToken(user.payload)
 			.then((saved)=>{
 
                 console.log('SaveDeviceTokenStatus',saved)
                 if(saved) return self.callback(null,{pushr: {message: 'Device has been successfully saved'}})
                 return self.callback({actionStatus:false,message:'There was a server error saving a bookmark'})
 			})
-			.catch((e)=>self.callback(e,null))
+			.catch((e)=>{
+                self.infoSync('THE ERROR IN REGISTER DEVICE')
+                self.infoSync(e)
+                return self.callback(e,null)
+            })
               
 
               
@@ -136,16 +140,22 @@ export const handlePushrTask = async function(data){
             }else{
 
                 self.updateToken(deviceToken).then((updatedToken)=>{
-
+                    self.infoSync('getToken success')
+                    self.infoSync(updatedToken)
                     return resolve(updatedToken)
 
                 }).catch((e)=>{
-
+                    self.infoSync('updateToken error')
+                    self.infoSync(e)
                     return reject(e)
                 })
             }
 
-        }).catch((e)=> reject(e))
+        }).catch((e)=> {
+            self.infoSync('getToken Error')
+            self.infoSync(e)
+            return reject(e)
+        })
 
 
         
@@ -279,7 +289,7 @@ export const updateToken = function(email,token){
 		
 		const self = this 
 		const pao = self.pao 
-		let uid = pay.ID
+		
 		
 		
 		
