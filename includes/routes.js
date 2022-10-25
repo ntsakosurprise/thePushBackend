@@ -22,4 +22,9 @@ module.exports = [
     method: "GET",
     type: "public",
   },
+  {
+    path: '/pushr',
+    method: 'POST',
+    type: 'public'
+},
 ];

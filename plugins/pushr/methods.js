@@ -17,7 +17,7 @@ export const init = function(){
   }
   
   
-  export const handlePushrTask = async function(data){
+export const handlePushrTask = async function(data){
   
       
       
@@ -31,7 +31,7 @@ export const init = function(){
       self.infoSync(data)
   
       // let uid = user.ID
-      self.infoSync('THE USER IN BLOGR&')
+      self.infoSync('THE USER IN PUSHR')
       self.infoSync(user)
       
   // console.log('the parsed data test')
@@ -54,86 +54,37 @@ export const init = function(){
       if(!contains(user,['payload'])) return self.callback({message: 'missing required payload'},null)
        
       // if(!contains(user.payload,['ID'])) return self.callback({message: 'missing required key'},null)
-      const {payload} = user 
-      const {blog={}} = payload
-      const {topic='',archive=null} = blog
+
   
     
    switch(user.action){
   
           
           
-          case 'saveDeviceToken': {
+          case 'registerDeviceToken': {
               
-              // self.logSync('tHE PAYLOAD IS DeFINED')
-              // self.logSync(user.payload)
-  
-              self.infoSync('THE topic')
-              self.infoSync(blog)
-              self.infoSync(topic)
+              self.infoSync('THE Device Token')
+              self.infoSync(user.payload)
+            //   return self.callback(null,{pushr: {message: 'Device has been successfully saved'}})
+             
           
-              if(topic.trim()){
-                  
-                  
-                  self.emit({
-                      type:'do-blogr-task',
-                      data:{
-      
-                          blog: {
-                              keys:['title','id','body','post_quote','post_topic_name','slug','author','is_primary','image','created_at'],
-                              table: 'jo_blog_post',
-                              condition: [`post_topic_name EQUALS ${topic}`],
-                              action: user.action,
-                              limit: 10,
-                              skip: 1
-                              
-                          },
-                          callback: self.blogrDoHandler.bind(this)
-                      }
-                      })
-  
-              }else{
-  
-                  self.emit({
-                      type:'do-blogr-task',
-                      data:{
-      
-                          blog: {
-                              keys:['title','id','body','post_quote','post_topic_name','slug','author','is_primary','image','created_at'],
-                              table: 'jo_blog_post',
-                              action: user.action,
-                              limit: 5,
-                              skip: 5
-                          },
-                          callback: self.blogrDoHandler.bind(this)
-                      }
-                      })
-  
-              }
+            self.saveDeviceToken(user.payload)
+			.then((saved)=>{
+
+                console.log('SaveDeviceTokenStatus',saved)
+                if(saved) return self.callback(null,{pushr: {message: 'Device has been successfully saved'}})
+                return self.callback({actionStatus:false,message:'There was a server error saving a bookmark'})
+			})
+			.catch((e)=>self.callback(e,null))
+              
+
               
           }
           break;
           case 'sendPushNotifications':{
               
               
-              if(!contains(blog,['postID'])) return self.callback({message: 'missing required key'},null) 
-  
-              let {postID} = blog
-              let postKey = typeof postID === 'number' ? 'id' : 'slug'
-  
-              self.emit({
-                  type:'do-blogr-task',
-                  data:{
-  
-                      blog: {
-                          keys:['title','id','body','post_quote','post_topic_name','slug','author','image','created_at'],
-                          postID:{[postKey]: postID},
-                          table: 'jo_blog_post',
-                          action: user.action,
-                      },
-                      callback: self.blogrDoHandler.bind(this)
-                  }
-                  })
+              
           }
           break; 
   
@@ -146,11 +97,69 @@ export const init = function(){
   
   
   
-  }  
+}  
   
   
+  export const saveDeviceToken = function(pay){
+
+	return new Promise((resolve,reject)=>{
+
+        
+        const self = this 
+		let pao = self.pao 
+		let pushr = pay.pushr
+        const {email='',deviceToken="",os=""} = pushr
+          
+          
+          if(!email) return reject(new Error('email key is required'))
+          if(!deviceToken) return reject(new Error('deviceToken key is required'))
+
+        self.getToken(email).then((foundToken)=>{
+
+            if(!foundToken){
+                let query = {
+                      
+                    fields: ['id','email','device_token','os'],
+                    values: [null,email,deviceToken,os]
+                      }
+        
+               
+                  
+              
+              
+                  self.query(
+                          'mysql.pushr_tokens.insert',
+                            query,
+                            self.dataRequestHandler.bind(this,resolve,reject)
+                      )
+                      
+            }else{
+
+                self.updateToken(deviceToken).then((updatedToken)=>{
+
+                    return resolve(updatedToken)
+
+                }).catch((e)=>{
+
+                    return reject(e)
+                })
+            }
+
+        }).catch((e)=> reject(e))
+
+
+        
+      
+      
+      })
   
-  export const getBlogPostWith = function(blog){
+
+
+
+	
+	
+}
+  export const sendPushNotification = function(pay){
   
       const self = this 
   
@@ -231,6 +240,66 @@ export const init = function(){
       
     
   }
+
+  export const getToken = function(email){
+	
+	
+	return new Promise((resolve,reject)=>{
+		
+		
+		const self = this 
+		const pao = self.pao 
+		// let uid = pay.ID
+		
+		
+		
+		let queries = {
+
+			returnFields: ['*'],
+			conditions: [`email EQUALS ${email}`]
+		 }
+		
+	
+		self.query(
+				'mysql.jo_job_bookmark.find',
+				queries,
+				self.multiDataRequestHandler.bind(this,resolve,reject)
+			)
+			
+		
+	})
+
+}
+
+export const updateToken = function(email,token){
+	
+	
+	return new Promise((resolve,reject)=>{
+		
+		
+		const self = this 
+		const pao = self.pao 
+		let uid = pay.ID
+		
+		
+		
+		let query = 
+					{
+				
+					//tables:[table],
+					condtions: [`email ISEQUALS ${email}`],
+					set: {device_token: token}
+				}
+
+            self.query(
+                `mysql.${table}.update`,
+                query,
+                self.dataRequestHandler.bind(this,resolve,reject)
+                )
+		
+	})
+
+}
   
   
   
@@ -246,20 +315,17 @@ export const init = function(){
   }
   
   
-  export const blogrDoHandler = function(e=null,results=null){
-  
-      const self = this 
-      let pao = self.pao
-  
-      console.log('BLog data request response') 
-     if(e) return self.callback({message:'blog fetching failed'},null) 
-  
-     self.infoSync('tHE BLOG HANDLER')
-     self.infoSync(results)
-  
-     return self.callback(null,{blog: [...results[0]],totalPosts:results[1][0].totalPosts })
-   
-     
-  
-  
-  } 
+
+  export const dataRequestHandler = function(resolve=null,reject=null,e=null,results=null){
+
+	const self = this 
+	let pao = self.pao
+
+	self.infoSync('Pushr data request response') 
+	self.infoSync(results)
+   if(e) return reject(e,null)
+ 
+   resolve(results)
+
+
+} 

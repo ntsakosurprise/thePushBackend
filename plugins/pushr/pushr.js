@@ -14,9 +14,12 @@ class Pushr{
  
      this.init = methods.init
      this.handlePushrTask = methods.handlePushrTask 
-     this.getBlogPostWith = methods.getBlogPostWith 
+     this.saveDeviceToken = methods.saveDeviceToken
      this.hookFunkToThingy = methods.hookFunkToThingy
-     this.blogrDoHandler = methods.blogrDoHandler
+     this.dataRequestHandler = methods.dataRequestHandler 
+     this.sendPushNotification = methods.sendPushNotification
+     this.getToken = methods.getToken
+     this.updateToken = methods.updateToken
    
     
   }
