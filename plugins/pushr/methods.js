@@ -171,80 +171,80 @@ export const handlePushrTask = async function(data){
 }
   export const sendPushNotification = function(pay){
   
-      const self = this 
+    //   const self = this 
   
-      return new Promise((resolve,reject)=>{
+    //   return new Promise((resolve,reject)=>{
   
   
-          let {postID} = pay
-          let postKey = typeof postID === 'number' ? 'id' : 'slug'
+    //       let {postID} = pay
+    //       let postKey = typeof postID === 'number' ? 'id' : 'slug'
   
-          self.emit({
-              type:'do-blogr-task',
-              data:{
+    //       self.emit({
+    //           type:'do-blogr-task',
+    //           data:{
   
-                  blog: {
-                      keys:['title','id','body','post_quote','post_topic_name','slug','author','image','created_at'],
-                      postID:{[postKey]: postID},
-                      table: 'jo_blog_post',
-                      action: 'getBlogPost',
-                  },
-                  callback: self.hookFunkToThingy(self,(resolve,reject,e=null,res=null)=>{
+    //               blog: {
+    //                   keys:['title','id','body','post_quote','post_topic_name','slug','author','image','created_at'],
+    //                   postID:{[postKey]: postID},
+    //                   table: 'jo_blog_post',
+    //                   action: 'getBlogPost',
+    //               },
+    //               callback: self.hookFunkToThingy(self,(resolve,reject,e=null,res=null)=>{
                           
-                      self.infoSync('Get blogPost response RESPONSE')
-                      self.infoSync(e)
-                      self.infoSync(res)
-                      if(e) return reject(e) 
-                      const post = res[0]
+    //                   self.infoSync('Get blogPost response RESPONSE')
+    //                   self.infoSync(e)
+    //                   self.infoSync(res)
+    //                   if(e) return reject(e) 
+    //                   const post = res[0]
   
-                      self.emit({
-                          type:'do-blogr-task',
-                          data:{
+    //                   self.emit({
+    //                       type:'do-blogr-task',
+    //                       data:{
           
-                              blog: {
-                                  keys:['title','id','body','post_quote','post_topic_name','slug','author','is_primary','image','created_at'],
-                                  table: 'jo_blog_post',
-                                  condition: [`post_topic_name EQUALS ${post.post_topic_name}`],
-                                  skip: 1,
-                                  limit: 4,
-                                  action: 'getBlogPosts',
-                              },
-                              callback: self.hookFunkToThingy(self,(reso,reje,e=null,res=null)=>{
+    //                           blog: {
+    //                               keys:['title','id','body','post_quote','post_topic_name','slug','author','is_primary','image','created_at'],
+    //                               table: 'jo_blog_post',
+    //                               condition: [`post_topic_name EQUALS ${post.post_topic_name}`],
+    //                               skip: 1,
+    //                               limit: 4,
+    //                               action: 'getBlogPosts',
+    //                           },
+    //                           callback: self.hookFunkToThingy(self,(reso,reje,e=null,res=null)=>{
   
-                                  self.infoSync('Get blogPost response RESPONSE')
-                                  self.infoSync(e)
-                                  self.infoSync(res)
-                                  if(e) return reso({post: post,related: []}) 
-                                  if(res.length === 0) return reso({post: post,related: []}) 
+    //                               self.infoSync('Get blogPost response RESPONSE')
+    //                               self.infoSync(e)
+    //                               self.infoSync(res)
+    //                               if(e) return reso({post: post,related: []}) 
+    //                               if(res.length === 0) return reso({post: post,related: []}) 
   
-                                  res = [...res[0]]
+    //                               res = [...res[0]]
   
-                                  let filteredPosts = res.filter((po,i)=>{
+    //                               let filteredPosts = res.filter((po,i)=>{
   
-                                      if(po[postKey].trim() !== postID.trim()) return true
-                                  })
-                                  return reso({post: post,related: [...filteredPosts]}) 
-  
-  
+    //                                   if(po[postKey].trim() !== postID.trim()) return true
+    //                               })
+    //                               return reso({post: post,related: [...filteredPosts]}) 
   
   
   
-                              },[resolve,reject])
-                          }
-                          })
+  
+  
+    //                           },[resolve,reject])
+    //                       }
+    //                       })
   
   
                       
               
   
               
-              },[resolve,reject]) // hoofFunkToThingy end
+    //           },[resolve,reject]) // hoofFunkToThingy end
               
-              }// End of data
-              })
+    //           }// End of data
+    //           })
   
           
-      })
+    //   })
         
          
       
@@ -261,7 +261,9 @@ export const handlePushrTask = async function(data){
 		const pao = self.pao 
 		// let uid = pay.ID
 		
-		
+		self.infoSync('getToken')
+        self.infoSync(email)
+        self.infoSync(self.query)
 		
 		let queries = {
 
@@ -273,7 +275,7 @@ export const handlePushrTask = async function(data){
 		self.query(
 				'mysql.push_token.find',
 				queries,
-				self.multiDataRequestHandler.bind(this,resolve,reject)
+				self.dataRequestHandler.bind(this,resolve,reject)
 			)
 			
 		
