@@ -108,7 +108,7 @@ export const handlePushrTask = async function(data){
         const self = this 
 		let pao = self.pao 
 		let pushr = pay.pushr
-        const {email='',deviceToken="",os=""} = pushr
+        const {email=null,deviceToken=null,os=null} = pushr
           
           
           if(!email) return reject(new Error('email key is required'))
@@ -128,7 +128,7 @@ export const handlePushrTask = async function(data){
               
               
                   self.query(
-                          'mysql.pushr_tokens.insert',
+                          'mysql.push_token.insert',
                             query,
                             self.dataRequestHandler.bind(this,resolve,reject)
                       )
@@ -166,7 +166,7 @@ export const handlePushrTask = async function(data){
       return new Promise((resolve,reject)=>{
   
   
-          let {postID} = blog
+          let {postID} = pay
           let postKey = typeof postID === 'number' ? 'id' : 'slug'
   
           self.emit({
@@ -261,7 +261,7 @@ export const handlePushrTask = async function(data){
 		
 	
 		self.query(
-				'mysql.jo_job_bookmark.find',
+				'mysql.push_token.find',
 				queries,
 				self.multiDataRequestHandler.bind(this,resolve,reject)
 			)
@@ -292,7 +292,7 @@ export const updateToken = function(email,token){
 				}
 
             self.query(
-                `mysql.${table}.update`,
+                `mysql.push_token.update`,
                 query,
                 self.dataRequestHandler.bind(this,resolve,reject)
                 )
