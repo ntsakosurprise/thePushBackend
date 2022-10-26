@@ -1,6 +1,7 @@
 
 
 
+const path = require('path');
 
 export const init = function(){
   
@@ -87,7 +88,18 @@ export const handlePushrTask = async function(data){
           break;
           case 'sendPushNotifications':{
               
-              
+            self.sendPushNotification(user.payload)
+			.then((saved)=>{
+
+                console.log('sendPushNotification',saved)
+                if(saved) return self.callback(null,{pushr: {message: 'Push was successfully made'}})
+                return self.callback({actionStatus:false,message:'There was a server error sending push'})
+			})
+			.catch((e)=>{
+                self.infoSync('THE ERROR IN send push notification')
+                self.infoSync(e)
+                return self.callback(e,null)
+            })
               
           }
           break; 
@@ -111,51 +123,76 @@ export const handlePushrTask = async function(data){
         
         const self = this 
 		let pao = self.pao 
+        let isUser = null
 		let pushr = pay.pushr
+        let foundUserIndex = -1 
+
         const {email=null,deviceToken=null,os=null} = pushr
           
           
           if(!email) return reject(new Error('email key is required'))
           if(!deviceToken) return reject(new Error('deviceToken key is required'))
+          self.userTokens = [...self.userTokens,{email,deviceToken,os}]
 
-        self.getToken(email).then((foundToken)=>{
+        isUser = self.userTokens.find((value,index)=>{
 
-            if(!foundToken){
-                let query = {
+              if(value.email.toLowerCase() === email.toLowerCase()){
+                foundUserIndex = index
+                return true
+              }
+
+          })
+
+        if(foundUserIndex >= 0){
+            self.infoSync(JSON.stringify(self.userTokens))
+            self.userTokens[foundUserIndex] = {...isUser,deviceToken: deviceToken}
+            return resolve(true)
+        }
+
+        self.userTokens = [...self.userTokens,{email,deviceToken,os}]
+        self.infoSync(JSON.stringify(self.userTokens))
+        return resolve(true)
+
+          
+
+        // self.getToken(email).then((foundToken)=>{
+
+        //     if(!foundToken){
+        //         let query = {
                       
-                    fields: ['id','email','device_token','os'],
-                    values: [null,email,deviceToken,os]
-                      }
+        //             fields: ['id','email','device_token','os'],
+        //             values: [null,email,deviceToken,os]
+        //               }
         
                
                   
               
               
-                  self.query(
-                          'mysql.push_token.insert',
-                            query,
-                            self.dataRequestHandler.bind(this,resolve,reject)
-                      )
+        //           self.query(
+        //                   'mysql.push_token.insert',
+        //                     query,
+        //                     self.dataRequestHandler.bind(this,resolve,reject)
+        //               )
                       
-            }else{
+        //     }else{
 
-                self.updateToken(deviceToken).then((updatedToken)=>{
-                    self.infoSync('getToken success')
-                    self.infoSync(updatedToken)
-                    return resolve(updatedToken)
+        //         self.updateToken(deviceToken).then((updatedToken)=>{
+        //             self.infoSync('getToken success')
+        //             self.infoSync(updatedToken)
+        //             return resolve(updatedToken)
 
-                }).catch((e)=>{
-                    self.infoSync('updateToken error')
-                    self.infoSync(e)
-                    return reject(e)
-                })
-            }
+        //         }).catch((e)=>{
+        //             self.infoSync('updateToken error')
+        //             self.infoSync(e)
+        //             return reject(e)
+        //         })
+        //     }
 
-        }).catch((e)=> {
-            self.infoSync('getToken Error')
-            self.infoSync(e)
-            return reject(e)
-        })
+        // }).catch((e)=> {
+        //     self.infoSync('getToken Error')
+        //     self.infoSync(e)
+        //     return reject(e)
+        // })
 
 
         
@@ -171,84 +208,147 @@ export const handlePushrTask = async function(data){
 }
   export const sendPushNotification = function(pay){
   
-    //   const self = this 
-  
-    //   return new Promise((resolve,reject)=>{
-  
-  
-    //       let {postID} = pay
-    //       let postKey = typeof postID === 'number' ? 'id' : 'slug'
-  
-    //       self.emit({
-    //           type:'do-blogr-task',
-    //           data:{
-  
-    //               blog: {
-    //                   keys:['title','id','body','post_quote','post_topic_name','slug','author','image','created_at'],
-    //                   postID:{[postKey]: postID},
-    //                   table: 'jo_blog_post',
-    //                   action: 'getBlogPost',
-    //               },
-    //               callback: self.hookFunkToThingy(self,(resolve,reject,e=null,res=null)=>{
-                          
-    //                   self.infoSync('Get blogPost response RESPONSE')
-    //                   self.infoSync(e)
-    //                   self.infoSync(res)
-    //                   if(e) return reject(e) 
-    //                   const post = res[0]
-  
-    //                   self.emit({
-    //                       type:'do-blogr-task',
-    //                       data:{
-          
-    //                           blog: {
-    //                               keys:['title','id','body','post_quote','post_topic_name','slug','author','is_primary','image','created_at'],
-    //                               table: 'jo_blog_post',
-    //                               condition: [`post_topic_name EQUALS ${post.post_topic_name}`],
-    //                               skip: 1,
-    //                               limit: 4,
-    //                               action: 'getBlogPosts',
-    //                           },
-    //                           callback: self.hookFunkToThingy(self,(reso,reje,e=null,res=null)=>{
-  
-    //                               self.infoSync('Get blogPost response RESPONSE')
-    //                               self.infoSync(e)
-    //                               self.infoSync(res)
-    //                               if(e) return reso({post: post,related: []}) 
-    //                               if(res.length === 0) return reso({post: post,related: []}) 
-  
-    //                               res = [...res[0]]
-  
-    //                               let filteredPosts = res.filter((po,i)=>{
-  
-    //                                   if(po[postKey].trim() !== postID.trim()) return true
-    //                               })
-    //                               return reso({post: post,related: [...filteredPosts]}) 
-  
-  
-  
-  
-  
-    //                           },[resolve,reject])
-    //                       }
-    //                       })
-  
-  
-                      
-              
-  
-              
-    //           },[resolve,reject]) // hoofFunkToThingy end
-              
-    //           }// End of data
-    //           })
-  
-          
-    //   })
-        
+    
+    return new Promise((resolve,reject)=>{
+
+        const self = this 
+		let pao = self.pao 
+		let push = pay.push
+        let {platform='',pushPayload} = push
+
+        if(platform === 'ios'){
+            self.sendIOSPush(pushPayload).then((pushed)=>{
+
+                self.infoSync('PUSH SUCCESSFULLY MADE ios')
+                self.infoSync(pushed)
+
+                return resolve(true)
+
+            })
+            .catch((error)=>{
+
+                self.infoSync("ios push error")
+                self.infoSync(error)
+                return reject(error)
+
+            })
+        }else{
+            self.sendAndroidPush(pushPayload).then((pushed)=>{
+
+                self.infoSync('PUSH SUCCESSFULLY MADE ANDROID')
+                self.infoSync(pushed)
+
+                return resolve(true)
+
+            })
+            .catch((error)=>{
+
+                self.infoSync("ANDROID push error")
+                self.infoSync(error)
+                return reject(error)
+
+            })
+        }
+
+    })
          
       
     
+  }
+
+  export const sendIOSPush = function(pay){
+    
+    const self = this
+    const {apn} = self
+    // const {push} = pay
+    const {deviceToken} = pay
+    
+    return new Promise((resolve,reject)=>{
+
+
+
+        self.infoSync('THE PROVIDER')
+        self.infoSync(apn)
+        self.infoSync('the filepath')
+        self.infoSync(path.resolve(__dirname,'./apn_auth.p8'))
+        self.infoSync('dEVICE TOKEN')
+        self.infoSync(deviceToken)
+
+        var options = {
+            token: {
+              key: path.resolve(__dirname,'./apn_auth.p8'),
+              keyId: "9JKVMLQ73V",
+              teamId: "9JKVMLQ73V",
+              
+            },
+            production: false
+          };
+
+        self.infoSync('TOKEN OPTIONS;;;')
+        self.infoSync(options)
+           
+          var apnProvider = new apn.Provider(options);
+        //   let deviceToken = "a9d0ed10e9cfd022a61cb08753f49c5a0b0dfb383697bf9f9d750a1003da19c7"
+
+          var note = new apn.Notification();
+ 
+            note.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
+            note.badge = 3;
+            // note.sound = "ping.aiff";
+            note.alert = "\uD83D\uDCE7 \u2709 You have a new message";
+            note.payload = {'messageFrom': 'Ntsako Surprise'};
+            note.topic = "org.reactjs.native.example.todoPushr";
+
+            apnProvider.send(note, deviceToken).then((result) => {
+                self.infoSync('THE PUSH RESULTS;;;')
+                self.infoSync(result)
+                resolve({pushed: true, result: result, pushMessage: 'pushed to apn'})
+              }).catch((error)=>{
+
+                console.log('the push error')
+                return reject(error)
+              });
+        
+    })
+
+  }
+
+  export const sendAndroidPush = function(pay){
+
+    return new Promise((resolve,reject)=>{
+
+        var options = {
+            token: {
+              key: "apn_auth.p8",
+              keyId: "9JKVMLQ73V",
+              teamId: "9JKVMLQ73V"
+            },
+            production: false
+          };
+           
+          var apnProvider = new apn.Provider(options);
+          let deviceToken = "a9d0ed10e9cfd022a61cb08753f49c5a0b0dfb383697bf9f9d750a1003da19c7"
+
+          var note = new apn.Notification();
+ 
+            note.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
+            note.badge = 3;
+            // note.sound = "ping.aiff";
+            note.alert = "\uD83D\uDCE7 \u2709 You have a new message";
+            note.payload = {'messageFrom': 'Ntsako Surprise'};
+            note.topic = "org.reactjs.native.example.todoPushr";
+
+            apnProvider.send(note, deviceToken).then( (result) => {
+                self.infoSync('THE PUSH RESULTS;;;')
+                self.infoSync(result)
+              }).catch((error)=>{
+
+                console.log('the push error')
+                return reject(error)
+              });
+        
+    })
+
   }
 
   export const getToken = function(email){
